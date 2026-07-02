@@ -12,10 +12,10 @@ conn, address = server_socket.accept()
 print ("Connected to client at ", address)
 while True:
     try:
-        output = conn.recv(3001)
+        output = conn.recv(2048)
         if output:
             print ("Message received from client:")
             print (output)
 
     except:
-        sys.exit(0)
+        # sys.exit(0)
