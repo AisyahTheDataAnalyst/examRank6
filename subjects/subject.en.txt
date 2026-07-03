@@ -33,7 +33,7 @@ Clients must be able to send messages to your program:
 - When the server receives a message, it must resend it to all other clients with "client %d: " prefixed to every line.
 
 When a client disconnects from the server:
-- The server sends a message ti all remaining connected clients: "server: client %d just left\n".
+- The server sends a message to all remaining connected clients: "server: client %d just left\n".
 
 Memory or fd leaks are prohibited.
 

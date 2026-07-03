@@ -31,7 +31,7 @@ typedef struct s_client
 }	t_client;
 
 // GLOBAL VARS
-struct pollfd fds[MAX_CLIENT + 1];	// plus 1 to include server
+struct pollfd pollfds[MAX_CLIENT + 1];	// plus 1 to include server
 t_client client[MAX_CLIENT + 1];	// plus 1 to include server
 int fdCount = 0;
 int currId = 0;
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	{
 		char *str = "Wrong number of arguments\n";
 		write(2, str, strlen(str));
-		return 1;
+		exit(1); // explicitely stated in subject to exit(1) for argument number's inaccuracy
 	}
 
 	// =====================================
@@ -86,20 +86,22 @@ int main(int argc, char *argv[])
 	// === end copied ===
 	// =====================================
 
-	// add server into poll
-	fds[0].fd = sockfd;
-	fds[0].events = POLLIN;
+	// add server into pollfds as the listener
+	// pollfds[0] == listener
+	// pollfds => all listener & clients
+	pollfds[0].fd = sockfd;
+	pollfds[0].events = POLLIN;
 	fdCount++;
 
 	while (1)
 	{
-		if (poll(fds, fdCount, -1) == -1)
+		if (poll(pollfds, fdCount, -1) == -1)	// poll malfunction, //! -1 in poll - for what?
 			fatalError_exit();
-		if (fds[0].revents & POLLIN)
+		if (pollfds[0].revents & POLLIN)		// new clients getting into the group chat!
 			newConnection(sockfd);
 		for (int i = 1; i < fdCount; ++i)
-			if (fds[i].revents & POLLIN)
-				handleClient(fds[i].fd, i);
+			if (pollfds[i].revents & POLLIN)	// existing clients send messages / left chat!
+				handleClient(pollfds[i].fd, i);
 	}
 	return 0;
 }
@@ -119,35 +121,36 @@ void fatalError_exit()
 
 void newConnection(int sockfd) 
 {
-	// === copied these 4 lines from main.c's int main , slightly adjust ===
+	// setting up accepting new connection
+		// === copied these 4 lines from main.c's int main , slightly adjusted ===
 	struct sockaddr_in cli;
 	socklen_t len = sizeof(cli);
-	int newfd = accept(sockfd, (struct sockaddr *)&cli, &len);
-	if (newfd < 0)
+	int connfd = accept(sockfd, (struct sockaddr *)&cli, &len);	// listener accepting new incoming TCP connections into becoming clients
+	if (connfd < 0)
 		fatalError_exit();
 	if (fdCount > MAX_CLIENT) 
 	{
-		close(newfd);
+		close(connfd);
 		return ;
 	}
 
-	fds[fdCount].fd = newfd;
-	fds[fdCount].events = POLLIN;
+	pollfds[fdCount].fd = connfd;
+	pollfds[fdCount].events = POLLIN;
 
 	client[fdCount].id = currId;
 	currId++;
 
 	bzero(client[fdCount].msg, RECV_BUFFER_SIZE);
 	sprintf(sendBuffer,  "server: client %d just arrived\n", client[fdCount].id);
-	boardcastMsg(newfd);
+	boardcastMsg(connfd);
 	fdCount++;
 }
 
 void boardcastMsg(int senderfd) 
 {
 	for (int i = 1; i < fdCount; ++i)
-		if (fds[i].fd != senderfd && fds[i].fd != -1)
-			send(fds[i].fd, sendBuffer, strlen(sendBuffer), 0);
+		if (pollfds[i].fd != senderfd && pollfds[i].fd != -1)
+			send(pollfds[i].fd, sendBuffer, strlen(sendBuffer), 0);
 }
 
 void handleClient(int fd, int idx) 
@@ -167,7 +170,7 @@ void disconnection(int fd, int idx)
 
 	for (int i = idx; i < fdCount - 1; ++i)
 	{
-		fds[i] = fds[i + 1];
+		pollfds[i] = pollfds[i + 1];
 		client[i] = client[i + 1];
 	}
 	--fdCount;
@@ -187,7 +190,7 @@ void processMsg(int idx, int ret)
 		{
 			client[idx].msg[j] = '\0';
 			sprintf(sendBuffer, "client %d: %s\n", client[idx].id, client[idx].msg);
-			boardcastMsg(fds[idx].fd);
+			boardcastMsg(pollfds[idx].fd);
 			bzero(client[idx].msg, RECV_BUFFER_SIZE);
 			j = -1;
 		}

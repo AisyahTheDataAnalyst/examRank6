@@ -51,6 +51,19 @@ Since this is a network program, you need two kind of terminal windows:
 	server: client 0 just left
 	```
 
+##### Leak Checks
+1. Memory Leaks
+```bash
+valgrind --leak-check=full ./mini_serv 8081
+```
+
+2. Fd Leaks
+```bash
+ps aux | grep mini_serv
+lsof -p <PID>
+# lsof (List Open Files)
+# What to look for: If you see the number of lines growing every time a client connects and disconnects, you have an fd leak.  
+```
 ---
 
 ### Recommendations
