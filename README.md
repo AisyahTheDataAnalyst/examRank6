@@ -23,19 +23,32 @@
 Since this is a network program, you need two kind of terminal windows:
 
 #### Start the server: 
-1. Compile: gcc -Wall -Wextra -Werror mini_serv.c -o mini_serv
-2. Run: ./mini_serv 8081 (You can use any valid port number).
+1. Compile:
+	```bash
+	gcc -Wall -Wextra -Werror mini_serv.c -o mini_serv
+	```
+2. Run: 
+	```bash
+	./mini_serv 8081 
+	#(You can use any valid port number)
+	```
 
 #### Connect clients (using nc):
 1. Open a new terminal and type: nc localhost 8081
 2. Open another 1/+ terminals and type the same command to see messages relay between them.
 3. This will showcase the "chat system" between all clients with indications of:
 - who enter the chat	
-	- ex: "server: client 1 just arrived"
+	```
+	server: client 1 just arrived
+	```
 - who sent the messages	
-	- ex: "client 0: where makan guys?"
+	```
+	client 0: where makan guys?
+	```
 - who left the chat
-	- ex: "server: client 0 just left"
+	```
+	server: client 0 just left
+	```
 
 ---
 
