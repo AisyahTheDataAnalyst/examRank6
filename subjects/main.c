@@ -1,4 +1,4 @@
-// BEWARE! this file have prohibited functions 
+// BEWARE! this file have prohibited functions with wrong output (printf and their messages)
 
 #include <errno.h>
 #include <string.h>
